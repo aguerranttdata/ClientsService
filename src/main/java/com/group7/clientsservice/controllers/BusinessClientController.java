@@ -42,8 +42,7 @@ public class BusinessClientController {
                                                                      @RequestBody BusinessClient client){
         return repository.findById(id)
                 .flatMap(existingClient -> {
-                    existingClient.setName(client.getName());
-                    existingClient.setRUC(client.getRUC());
+                    existingClient.setSocialName(client.getSocialName());
                     return repository.save(existingClient);
                 })
                 .map(updateClient -> ResponseEntity.ok(updateClient))

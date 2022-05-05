@@ -40,9 +40,8 @@ public class PersonalClientController {
                                                      @RequestBody PersonalClient client){
         return repository.findById(id)
                 .flatMap(existingClient -> {
-                    existingClient.setName(client.getName());
-                    existingClient.setDNI(client.getDNI());
-                    existingClient.setEmail(client.getEmail());
+                    existingClient.setFirstName(client.getFirstName());
+                    existingClient.setLastName(client.getLastName());
                     return repository.save(existingClient);
                 })
                 .map(updateClient -> ResponseEntity.ok(updateClient))

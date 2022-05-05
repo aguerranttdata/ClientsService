@@ -13,6 +13,7 @@ import org.springframework.data.annotation.Id;
 public abstract class Client {
     @Id
     private String id;
-    private String name;
     private String type;
+    private String documentType;
+    private Long documentNumber;
 }

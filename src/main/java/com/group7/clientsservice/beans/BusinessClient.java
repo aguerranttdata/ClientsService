@@ -8,12 +8,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection="renato_business_clients2")
+@Document(collection="renato_clients3")
 public class BusinessClient extends Client{
-    private Long RUC;
+    private String socialName;
 
-    public BusinessClient(String id, String name, Long RUC){
-        super(id,name,"Business");
-        this.RUC = RUC;
+    public BusinessClient(String id, String documentType, Long documentNumber,String socialName){
+        super(id,"Business",documentType,documentNumber);
+        this.socialName = socialName;
     }
 }

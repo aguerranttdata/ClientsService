@@ -8,14 +8,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection="renato_personal_clients2")
+@Document(collection="renato_clients3")
 public class PersonalClient extends Client {
-    private Long DNI;
-    private String email;
+    private String firstName;
+    private String lastName;
 
-    public PersonalClient(String id, String name, Long DNI, String email){
-        super(id,name,"Personal");
-        this.DNI = DNI;
-        this.email = email;
+    public PersonalClient(String id, String documentType, Long documentNumber,String firstName, String lastName){
+        super(id,"Personal",documentType,documentNumber);
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 }
