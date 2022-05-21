@@ -1,14 +1,14 @@
-package com.group7.clientsservice.entities;
+package com.group7.clientsservice.model;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@Builder
 @Getter
 @Setter
 @Document("clients")
-@AllArgsConstructor
 public class Client {
 
     private String id;
@@ -18,4 +18,5 @@ public class Client {
     private String lastName;
     private String businessName;
     private String type;
+    private String profile;
 }
