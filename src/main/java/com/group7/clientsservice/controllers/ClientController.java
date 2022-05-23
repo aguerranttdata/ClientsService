@@ -2,8 +2,8 @@ package com.group7.clientsservice.controllers;
 
 import com.group7.clientsservice.dto.ClientsRequestDto;
 import com.group7.clientsservice.dto.ClientsResponseDto;
+import com.group7.clientsservice.dto.ProductsResponseDto;
 import com.group7.clientsservice.model.Client;
-import com.group7.clientsservice.model.ClientProducts;
 import com.group7.clientsservice.service.IClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -45,7 +45,7 @@ public class ClientController {
     }
 
     @GetMapping("/{id}/products")
-    public Mono<ClientProducts> getProductsByClient(@PathVariable String id) {
+    public Mono<ProductsResponseDto> getProductsByClient(@PathVariable String id) {
         return iClientService.getProductsByClient(id);
     }
 }

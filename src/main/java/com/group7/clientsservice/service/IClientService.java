@@ -2,8 +2,8 @@ package com.group7.clientsservice.service;
 
 import com.group7.clientsservice.dto.ClientsRequestDto;
 import com.group7.clientsservice.dto.ClientsResponseDto;
+import com.group7.clientsservice.dto.ProductsResponseDto;
 import com.group7.clientsservice.model.Client;
-import com.group7.clientsservice.model.ClientProducts;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -20,5 +20,5 @@ public interface IClientService {
 
     Mono<Boolean> existsById(String id);
 
-    Mono<ClientProducts> getProductsByClient(String id);
+    Mono<ProductsResponseDto> getProductsByClient(String id);
 }

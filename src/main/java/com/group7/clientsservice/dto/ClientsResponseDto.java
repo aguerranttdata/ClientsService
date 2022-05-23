@@ -6,8 +6,8 @@ import lombok.*;
 @Builder
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class ClientsResponseDto {
 
     private String id;
