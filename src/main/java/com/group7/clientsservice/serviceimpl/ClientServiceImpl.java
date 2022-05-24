@@ -2,20 +2,16 @@ package com.group7.clientsservice.serviceimpl;
 
 import com.group7.clientsservice.dto.ClientsRequestDto;
 import com.group7.clientsservice.dto.ClientsResponseDto;
-import com.group7.clientsservice.exception.client.ClientsCreationException;
+import com.group7.clientsservice.dto.ProductsResponseDto;
 import com.group7.clientsservice.exception.client.ClientsDuplicationException;
-import com.group7.clientsservice.model.Accounts;
-import com.group7.clientsservice.model.Client;
-import com.group7.clientsservice.model.ClientProducts;
 import com.group7.clientsservice.exception.client.ClientsNotFoundException;
+import com.group7.clientsservice.model.Client;
 import com.group7.clientsservice.repository.ClientRepository;
 import com.group7.clientsservice.service.IClientService;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import com.group7.clientsservice.utils.WebClientUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -25,6 +21,8 @@ public class ClientServiceImpl implements IClientService {
 
     @Autowired
     private ClientRepository clientRepository;
+    @Autowired
+    private WebClientUtils webClientUtils;
 
     @Override
     public Flux<Client> getAll() {
@@ -83,38 +81,23 @@ public class ClientServiceImpl implements IClientService {
         return clientRepository.existsById(id);
     }
 
-    @CircuitBreaker(name = "accounts",fallbackMethod = "accountsUnavailable")
-    public Mono<ClientProducts> getProductsByClient(String id) {
+    public Mono<ProductsResponseDto> getProductsByClient(String id) {
         return getById(id)
-                .flatMap(c -> {
-                    ClientProducts clientProducts = new ClientProducts();
-                    clientProducts.setClient(c);
-                    return getAccounts(c.getId())
+                .flatMap(client -> {
+                    ProductsResponseDto clientProducts = new ProductsResponseDto(client);
+                    return webClientUtils.getAccounts(id)
                             .collectList()
                             .flatMap(acc -> {
                                 clientProducts.setAccounts(acc);
-                                return Mono.just(clientProducts);
+                                return webClientUtils.getCredits(id)
+                                        .collectList()
+                                        .flatMap(cred -> {
+                                            clientProducts.setCredit(cred);
+                                            return Mono.just(clientProducts);
+                                        });
                             })
-                            .doOnError(ex -> log.error("Error find Accounts by Client ", ex))
-                            .onErrorMap(ex -> new Exception(ex.getMessage()))
-                            .doOnSuccess(res -> log.info("Created new account with ID: {}", id));
+                            .doOnError(ex -> log.error("Error find Products by Client ", ex));
                 });
-    }
-
-    private Flux<Accounts> getAccounts(String id) {
-        return WebClient.create()
-                .mutate()
-                .baseUrl("http://localhost:8081/accounts/client")
-                .build()
-                .get()
-                .uri("/{id}", id)
-                .retrieve()
-                .onStatus(HttpStatus::is4xxClientError, clientResponse -> Mono.error(new ClientsCreationException("Not found Client with ID: " + id)))
-                .bodyToFlux(Accounts.class);
-    }
-
-    public Mono<String> accountsUnavailable(String id, Exception ex) {
-        return Mono.error(new Exception("Accounts service unavailable"));
     }
 
 }
