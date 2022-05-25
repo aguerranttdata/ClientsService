@@ -1,8 +1,11 @@
 package com.group7.clientsservice.serviceimpl;
 
 import com.group7.clientsservice.dto.ClientsRequestDto;
+import com.group7.clientsservice.model.Accounts;
 import com.group7.clientsservice.model.Client;
+import com.group7.clientsservice.model.Credit;
 import com.group7.clientsservice.repository.ClientRepository;
+import com.group7.clientsservice.utils.WebClientUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -10,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -23,6 +27,8 @@ class ClienteServiceImplTest {
     ClientServiceImpl clienteService;
     @Mock
     private ClientRepository clientRepository;
+    @Mock
+    private WebClientUtils webClientUtils;
     private Client client;
     private ClientsRequestDto clientDto;
 
@@ -33,6 +39,8 @@ class ClienteServiceImplTest {
                 .id("123")
                 .documentType("DNI")
                 .documentNumber("74910877")
+                .firstName("Cristian")
+                .lastName("Paredes")
                 .businessName("")
                 .type("personal")
                 .profile("vip")
@@ -41,6 +49,8 @@ class ClienteServiceImplTest {
         clientDto = ClientsRequestDto.builder()
                 .documentType("DNI")
                 .documentNumber("74910877")
+                .firstName("Cristian")
+                .lastName("Paredes")
                 .businessName("")
                 .type("personal")
                 .profile("vip")
@@ -79,24 +89,58 @@ class ClienteServiceImplTest {
                 .thenReturn(Mono.empty());
         when(clientRepository.insert(any(Client.class)))
                 .thenReturn(Mono.just(client));
-        assertNotNull(clienteService.save(clientDto));
+
+        StepVerifier.create(clienteService.save(clientDto))
+                .assertNext(client -> {
+                    assertNotNull(client);
+                })
+                .verifyComplete();
+
     }
 
     @Test
     void update() {
         when(clientRepository.findById(any(String.class))).thenReturn(Mono.just(client));
         when(clientRepository.save(any(Client.class))).thenReturn(Mono.just(client));
-        assertNotNull(clienteService.update("123", clientDto));
+        StepVerifier.create(clienteService.update("123", clientDto))
+                .assertNext(client -> {
+                    assertNotNull(client);
+                })
+                .verifyComplete();
     }
 
     @Test
     void existsById() {
-        String result = blockingHelloWorld().block();
-        assertEquals("Hello world!", result);
+        when(clientRepository.existsById(any(String.class))).thenReturn(Mono.just(true));
+        assertNotNull(clienteService.existsById(client.getId()));
     }
 
-    Mono<String> blockingHelloWorld() {
-        return Mono.just("Hello world!");
+    @Test
+    void getProductsByClient() {
+
+        Accounts accounts = Accounts.builder()
+                .id("123")
+                .client("456")
+                .type("personal")
+                .clientProfile("vip")
+                .build();
+
+        Credit credit = Credit.builder()
+                .id("123")
+                .client("456")
+                .amount(50)
+                .build();
+
+        when(clientRepository.findById(any(String.class))).thenReturn(Mono.just(client));
+        when(webClientUtils.getAccounts(any(String.class))).thenReturn(Flux.just(accounts));
+        when(webClientUtils.getCredits(any(String.class))).thenReturn(Flux.just(credit));
+
+        StepVerifier.create(clienteService.getProductsByClient("123"))
+                .assertNext(products -> {
+                            assertNotNull(products);
+                        })
+                .verifyComplete();
+
     }
 
 }

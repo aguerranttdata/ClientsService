@@ -37,7 +37,7 @@ public class WebClientUtils {
     }
 
     public Flux<String> accountsUnavailable(String id, Exception ex) {
-        return Flux.just("Accounts service unavailable");
+        return Flux.just("Accounts service unavailable, ID: "+ id + ", Exception: " + ex.getMessage());
     }
 
     @CircuitBreaker(name = "credits",fallbackMethod = "creditsUnavailable")
@@ -54,7 +54,7 @@ public class WebClientUtils {
     }
 
     public Flux<String> creditsUnavailable(String id, Exception ex) {
-        return Flux.just("Credits service unavailable");
+        return Flux.just("Credits service unavailable, ID: "+ id + ", Exception: " + ex.getMessage());
     }
 
 }

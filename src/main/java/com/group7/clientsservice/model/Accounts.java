@@ -1,10 +1,11 @@
 package com.group7.clientsservice.model;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
-
+@Builder
 @Getter
 @Setter
 public class Accounts {
@@ -12,6 +13,7 @@ public class Accounts {
     private String id;
     private String client;
     private String clientType;
+    private String clientProfile;
     private String type;
     private Double balance;
     private Double maintenanceFee;
