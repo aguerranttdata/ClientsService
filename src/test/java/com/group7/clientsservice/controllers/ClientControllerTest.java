@@ -10,21 +10,19 @@ import com.group7.clientsservice.repository.ClientRepository;
 import com.group7.clientsservice.utils.WebClientUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -154,18 +152,18 @@ class ClientControllerTest {
 
     @Test
     void getProductsByClient() {
-        Accounts accounts = Accounts.builder()
-                .id("123")
-                .client("456")
-                .type("personal")
-                .clientProfile("vip")
-                .build();
 
-        Credit credit = Credit.builder()
-                .id("123")
-                .client("456")
-                .amount(50)
-                .build();
+        Accounts accounts =  new Accounts();
+        accounts.setId("123");
+        accounts.setClient("456");
+        accounts.setType("personal");
+        accounts.setClientProfile("vip");
+
+        Credit credit = new Credit();
+        credit.setId("123");
+        credit.setClient("456");
+        credit.setAmount(50);
+
         when(clientRepository.findById(any(String.class))).thenReturn(Mono.just(client));
         when(webClientUtils.getAccounts(any(String.class))).thenReturn(Flux.just(accounts));
         when(webClientUtils.getCredits(any(String.class))).thenReturn(Flux.just(credit));

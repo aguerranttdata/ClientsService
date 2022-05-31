@@ -32,7 +32,7 @@ public class WebClientUtils {
                 .get()
                 .uri("/{id}", id)
                 .retrieve()
-                .onStatus(HttpStatus::is4xxClientError, errorResponse -> Mono.error(new AccountsNotFoundException("Not found Client with ID: " + id)))
+                .onStatus(HttpStatus::is4xxClientError, errorResponse -> Mono.error(new AccountsNotFoundException("Not found Accounts with Client ID: " + id)))
                 .bodyToFlux(Accounts.class);
     }
 
@@ -49,7 +49,7 @@ public class WebClientUtils {
                 .get()
                 .uri("/{id}", id)
                 .retrieve()
-                .onStatus(HttpStatus::is4xxClientError, errorResponse -> Mono.error(new CreditsNotFoundException("Not found Client with ID: " + id)))
+                .onStatus(HttpStatus::is4xxClientError, errorResponse -> Mono.error(new CreditsNotFoundException("Not found Credits with Client ID: " + id)))
                 .bodyToFlux(Credit.class);
     }
 

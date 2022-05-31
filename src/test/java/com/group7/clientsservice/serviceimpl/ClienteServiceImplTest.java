@@ -1,6 +1,11 @@
 package com.group7.clientsservice.serviceimpl;
 
 import com.group7.clientsservice.dto.ClientsRequestDto;
+import com.group7.clientsservice.dto.ClientsResponseDto;
+import com.group7.clientsservice.exception.accounts.AccountsNotFoundException;
+import com.group7.clientsservice.exception.accounts.CreditsNotFoundException;
+import com.group7.clientsservice.exception.client.ClientsCreationException;
+import com.group7.clientsservice.exception.client.ClientsDuplicationException;
 import com.group7.clientsservice.model.Accounts;
 import com.group7.clientsservice.model.Client;
 import com.group7.clientsservice.model.Credit;
@@ -30,7 +35,7 @@ class ClienteServiceImplTest {
     @Mock
     private WebClientUtils webClientUtils;
     private Client client;
-    private ClientsRequestDto clientDto;
+    private ClientsRequestDto clientRequestDto;
 
     @BeforeEach
     void setUp() {
@@ -46,7 +51,7 @@ class ClienteServiceImplTest {
                 .profile("vip")
                 .build();
 
-        clientDto = ClientsRequestDto.builder()
+        clientRequestDto = ClientsRequestDto.builder()
                 .documentType("DNI")
                 .documentNumber("74910877")
                 .firstName("Cristian")
@@ -88,9 +93,8 @@ class ClienteServiceImplTest {
         when(clientRepository.findClientByDocumentTypeAndDocumentNumber(any(String.class), any(String.class)))
                 .thenReturn(Mono.empty());
         when(clientRepository.insert(any(Client.class)))
-                .thenReturn(Mono.just(client));
-
-        StepVerifier.create(clienteService.save(clientDto))
+                .thenReturn(Mono.just(clientRequestDto.toModel()));
+        StepVerifier.create(clienteService.save(clientRequestDto))
                 .assertNext(client -> {
                     assertNotNull(client);
                 })
@@ -99,14 +103,68 @@ class ClienteServiceImplTest {
     }
 
     @Test
+    void saveClientsCreationException1() {
+        when(clientRepository.findClientByDocumentTypeAndDocumentNumber(any(String.class), any(String.class)))
+                .thenReturn(Mono.empty());
+
+        clientRequestDto.setDocumentType(null);
+        clientRequestDto.setDocumentNumber(null);
+
+        StepVerifier.create(clienteService.save(clientRequestDto))
+                .verifyError(ClientsCreationException.class);
+
+    }
+
+    @Test
+    void saveClientsCreationException2() {
+        when(clientRepository.findClientByDocumentTypeAndDocumentNumber(any(String.class), any(String.class)))
+                .thenReturn(Mono.empty());
+        when(clientRepository.insert(any(Client.class)))
+                .thenThrow(new ClientsCreationException("FirstName and LastName are required"));
+
+        clientRequestDto.setFirstName(null);
+        clientRequestDto.setLastName(null);
+
+        StepVerifier.create(clienteService.save(clientRequestDto))
+                .verifyError(ClientsCreationException.class);
+
+    }
+
+    @Test
+    void saveClientsDuplicationException() {
+        when(clientRepository.findClientByDocumentTypeAndDocumentNumber(any(String.class), any(String.class)))
+                .thenReturn(Mono.empty());
+        when(clientRepository.insert(any(Client.class))).thenThrow(new ClientsDuplicationException(""));
+        StepVerifier.create(clienteService.save(clientRequestDto))
+                .verifyError(ClientsDuplicationException.class);
+    }
+
+    @Test
+    void saveClientsCreationException() {
+        when(clientRepository.findClientByDocumentTypeAndDocumentNumber(any(String.class), any(String.class)))
+                .thenReturn(Mono.empty());
+        when(clientRepository.insert(any(Client.class))).thenThrow(new ClientsCreationException(""));
+        StepVerifier.create(clienteService.save(clientRequestDto))
+                .verifyError(ClientsCreationException.class);
+    }
+
+    @Test
     void update() {
         when(clientRepository.findById(any(String.class))).thenReturn(Mono.just(client));
-        when(clientRepository.save(any(Client.class))).thenReturn(Mono.just(client));
-        StepVerifier.create(clienteService.update("123", clientDto))
+        when(clientRepository.save(any(Client.class))).thenReturn(Mono.just(clientRequestDto.toModel()));
+        StepVerifier.create(clienteService.update("123", clientRequestDto))
                 .assertNext(client -> {
                     assertNotNull(client);
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    void updateClientsCreationException() {
+        when(clientRepository.findById(any(String.class))).thenReturn(Mono.just(client));
+        when(clientRepository.save(any(Client.class))).thenThrow(new ClientsCreationException(""));
+        StepVerifier.create(clienteService.update("123", clientRequestDto))
+                .verifyError(ClientsCreationException.class);
     }
 
     @Test
@@ -118,18 +176,16 @@ class ClienteServiceImplTest {
     @Test
     void getProductsByClient() {
 
-        Accounts accounts = Accounts.builder()
-                .id("123")
-                .client("456")
-                .type("personal")
-                .clientProfile("vip")
-                .build();
+        Accounts accounts =  new Accounts();
+        accounts.setId("123");
+        accounts.setClient("456");
+        accounts.setType("personal");
+        accounts.setClientProfile("vip");
 
-        Credit credit = Credit.builder()
-                .id("123")
-                .client("456")
-                .amount(50)
-                .build();
+        Credit credit = new Credit();
+        credit.setId("123");
+        credit.setClient("456");
+        credit.setAmount(50);
 
         when(clientRepository.findById(any(String.class))).thenReturn(Mono.just(client));
         when(webClientUtils.getAccounts(any(String.class))).thenReturn(Flux.just(accounts));
@@ -143,4 +199,31 @@ class ClienteServiceImplTest {
 
     }
 
+    @Test
+    void getProductsByClientAccountsNotFoundException() {
+        when(clientRepository.findById(any(String.class))).thenReturn(Mono.just(client));
+        when(webClientUtils.getAccounts(any(String.class))).thenThrow(new AccountsNotFoundException(""));
+
+        StepVerifier.create(clienteService.getProductsByClient("123"))
+                .verifyError(AccountsNotFoundException.class);
+
+    }
+
+    @Test
+    void getProductsByClientCreditsNotFoundException() {
+
+        Accounts accounts =  new Accounts();
+        accounts.setId("123");
+        accounts.setClient("456");
+        accounts.setType("personal");
+        accounts.setClientProfile("vip");
+
+        when(clientRepository.findById(any(String.class))).thenReturn(Mono.just(client));
+        when(webClientUtils.getAccounts(any(String.class))).thenReturn(Flux.just(accounts));
+        when(webClientUtils.getCredits(any(String.class))).thenThrow(new CreditsNotFoundException(""));
+
+        StepVerifier.create(clienteService.getProductsByClient("123"))
+                .verifyError(CreditsNotFoundException.class);
+
+    }
 }
